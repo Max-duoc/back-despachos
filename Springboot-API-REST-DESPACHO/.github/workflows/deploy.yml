@@ -1,4 +1,3 @@
-<<<<<<< HEAD
 name: CI/CD Backend Despachos
 
 on:
@@ -25,31 +24,3 @@ jobs:
           context: .
           push: true
           tags: ${{ secrets.DOCKERHUB_USERNAME }}/back-despachos:latest
-=======
-name: CI/CD Backend Despachos
-
-on:
-  push:
-    branches:
-      - deploy
-
-jobs:
-  build-and-push:
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout codigo
-        uses: actions/checkout@v4
-
-      - name: Login a Docker Hub
-        uses: docker/login-action@v3
-        with:
-          username: ${{ secrets.DOCKERHUB_USERNAME }}
-          password: ${{ secrets.DOCKERHUB_TOKEN }}
-
-      - name: Build y Push imagen
-        uses: docker/build-push-action@v5
-        with:
-          context: .
-          push: true
-          tags: ${{ secrets.DOCKERHUB_USERNAME }}/back-despachos:latest
->>>>>>> 547f91d5b5e67543e368b6b455c2d37e094c6c26
