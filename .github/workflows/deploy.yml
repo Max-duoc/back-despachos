@@ -25,28 +25,24 @@ jobs:
           push: true
           tags: ${{ secrets.DOCKERHUB_USERNAME }}/back-despachos:latest
 
-      - name: Deploy en EC2
+      - name: Deploy en EC2 Backend via Jump Host
         uses: appleboy/ssh-action@v1.0.3
         with:
           host: ${{ secrets.EC2_HOST }}
           username: ${{ secrets.EC2_USER }}
           key: ${{ secrets.EC2_KEY }}
-          proxy_host: ${{ secrets.EC2_BACKEND_HOST }}
-          proxy_username: ${{ secrets.EC2_USER }}
-          proxy_key: ${{ secrets.EC2_KEY }}
           script: |
-            sudo docker pull ${{ secrets.DOCKERHUB_USERNAME }}/back-despachos:latest
-            sudo docker stop backend_despachos || true
-            sudo docker rm backend_despachos || true
-            sudo docker run -d \
-              --name backend_despachos \
-              --restart unless-stopped \
-              -p 8081:8081 \
-              --link mysql_despachos:mysql \
-              -e DB_ENDPOINT=mysql \
-              -e DB_PORT=3306 \
-              -e DB_NAME=despachos_db \
-              -e DB_USERNAME=appuser \
-              -e DB_PASSWORD=apppassword \
-              -e SPRING_DATASOURCE_URL="jdbc:mysql://mysql:3306/despachos_db?useSSL=false&serverTimezone=UTC&createDatabaseIfNotExist=true&allowPublicKeyRetrieval=true" \
-              ${{ secrets.DOCKERHUB_USERNAME }}/back-despachos:latest
+            ssh -i ~/.ssh/id_rsa -o StrictHostKeyChecking=no ec2-user@${{ secrets.EC2_BACKEND_HOST }} "
+              sudo docker pull ${{ secrets.DOCKERHUB_USERNAME }}/back-despachos:latest &&
+              sudo docker stop backend_despachos || true &&
+              sudo docker rm backend_despachos || true &&
+              sudo docker run -d \
+                --name backend_despachos \
+                --restart unless-stopped \
+                -p 8081:8081 \
+                --link mysql_despachos:mysql \
+                -e SPRING_DATASOURCE_URL='jdbc:mysql://mysql:3306/despachos_db?useSSL=false&serverTimezone=UTC&createDatabaseIfNotExist=true&allowPublicKeyRetrieval=true' \
+                -e DB_USERNAME=appuser \
+                -e DB_PASSWORD=apppassword \
+                ${{ secrets.DOCKERHUB_USERNAME }}/back-despachos:latest
+            "
